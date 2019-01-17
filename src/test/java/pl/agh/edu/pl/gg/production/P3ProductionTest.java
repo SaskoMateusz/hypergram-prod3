@@ -33,19 +33,20 @@ public class P3ProductionTest {
         int y1 = bitmap.getMinY() + bitmap.getHeight() - 1;
         int x2 = bitmap.getMinX() + bitmap.getWidth() - 1;
         int y2 = bitmap.getMinY() + bitmap.getHeight() - 1;
-        int x3 = (bitmap.getMinX()+bitmap.getWidth()-1)/2;
-        int y3 = (bitmap.getMinY()+bitmap.getHeight()-1)/2;
+        int x3 = (bitmap.getMinX() + bitmap.getWidth() - 1) / 2;
+        int y3 = (bitmap.getMinY() + bitmap.getHeight() - 1) / 2;
 
-        Vertex vertex1 = new Vertex(new Point(x1, y1), new RgbColor(bitmap.getRGB(x1,y1)));
-        Vertex vertex2 = new Vertex(new Point(x2, y2), new RgbColor(bitmap.getRGB(x2,y2)));
-        Vertex vertex3 = new Vertex(new Point(x3, y3), new RgbColor(bitmap.getRGB(x3,y3)));
+        Vertex vertex1 = new Vertex(new Point(x1, y1), new RgbColor(bitmap.getRGB(x1, y1)));
+        Vertex vertex2 = new Vertex(new Point(x2, y2), new RgbColor(bitmap.getRGB(x2, y2)));
+        Vertex vertex3 = new Vertex(new Point(x3, y3), new RgbColor(bitmap.getRGB(x3, y3)));
 
-        graph.addEdge(new HyperEdge(HyperEdgeType.BOUNDARY, vertex1, vertex2),
+        HyperEdge boundary = new HyperEdge(HyperEdgeType.BOUNDARY, vertex1, vertex2);
+        graph.addEdge(boundary,
                 new HyperEdge(HyperEdgeType.INTERIOR, vertex1, vertex3),
                 new HyperEdge(HyperEdgeType.INTERIOR, vertex2, vertex3),
                 new HyperEdge(HyperEdgeDirection.UP, vertex3));
 
-        p3Production = new P3Production(bitmap, x1, x2, x3, y1, y2, y3);
+        p3Production = new P3Production(bitmap, boundary);
     }
 
     @Test
@@ -66,7 +67,7 @@ public class P3ProductionTest {
         Vertex maxXMaxYVertex = VertexUtil.findMaxXMaxY(graph.getVertices()).orElseThrow(IllegalStateException::new);
 
         int graphWidth = maxXMaxYVertex.getX() - minXMaxYVertex.getX() + 1;
-        int graphHeight = (maxXMaxYVertex.getY() + 1) / 2 ;
+        int graphHeight = (maxXMaxYVertex.getY() + 1) / 2;
 
         Assert.assertEquals(graphWidth, bitmap.getWidth());
         Assert.assertTrue(graphHeight <= bitmap.getHeight());
@@ -123,19 +124,14 @@ public class P3ProductionTest {
                 .collect(Collectors.toSet());
         borderEdges.forEach(edge -> Assert.assertEquals(2, edge.getVertices().size()));
 
-        borderEdges.forEach(edge ->{
+       // borderEdges.forEach(edge -> {
             Vertex vertex1 = VertexUtil.findMinXMaxY(graph.getVertices()).orElseThrow(IllegalStateException::new);
             Vertex vertex2 = VertexUtil.findMaxXMaxY(graph.getVertices()).orElseThrow(IllegalStateException::new);
-            Vertex vertex3 = null;
+            Vertex vertex3 = VertexUtil.findWithXAndY(graph.getVertices(),(vertex1.getX() + vertex2.getX()) / 2,(vertex1.getY() + vertex2.getY()) / 2).orElseThrow(IllegalStateException::new);
 
-            for (Vertex vertex : edge.getVertices()) {
-                if (vertex.getX() == (vertex1.getX() + vertex2.getX())/2 && vertex.getY() == (vertex1.getY() + vertex2.getY())/2) {
-                    vertex3 = vertex;
-                }
-            }
             assertThereIsEdgeBetween(vertex1, vertex3, borderEdges);
             assertThereIsEdgeBetween(vertex2, vertex3, borderEdges);
-        });
+        //});
     }
 
     private void assertThereIsEdgeBetween(Vertex vertex1, Vertex vertex2, Set<HyperEdge> edges) {
